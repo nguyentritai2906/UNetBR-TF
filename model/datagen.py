@@ -1,9 +1,38 @@
-import glob
-import os
+import math
+import random
 
+import cv2
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
 from PIL import Image, ImageOps
+from tensorflow.keras.preprocessing.image import apply_affine_transform
+
+
+def transform_images(img, gt, size):
+    #  img = tf.image.resize_with_pad(img, 1280, 1280)
+    #  gt = tf.image.resize_with_pad(gt, 1280, 1280)
+
+    #  img, gt = random_scale(img, gt, 0.75, 1.5, 0.25)
+    img, gt = random_crop(img, gt, size=size)
+    img = invert_image(img)
+    img, gt = random_rotation(img, gt)
+    return img, gt
+
+
+def random_rotation(image, label):
+    degree = tf.random.normal([]) * 360
+    image = tfa.image.rotate(image,
+                             degree * math.pi / 180,
+                             interpolation='nearest')
+    label = tfa.image.rotate(label,
+                             degree * math.pi / 180,
+                             interpolation='nearest')
+    return image, label
+
+
+def invert_image(img):
+    return 1 - img
 
 
 def read_image(file_name, format='L'):
@@ -31,7 +60,7 @@ def read_image(file_name, format='L'):
     return image
 
 
-def random_crop_and_pad_image_and_labels(image, labels, size):
+def random_crop(image, labels, size):
     """Randomly crops `image` together with `labels`.
 
   Args:
@@ -56,17 +85,39 @@ def random_crop_and_pad_image_and_labels(image, labels, size):
     return (img, label)
 
 
-if __name__ == "__main__":
-    root = './dataset/DIBCO'
-    gt_fnames = sorted(glob.glob(os.path.join(root, 'gt', '*.jpeg')))
-    img_fnames = sorted(glob.glob(os.path.join(root, 'img', '*.jpeg')))
-    iterator = iter(zip(gt_fnames, img_fnames))
-    dataset = tf.data.Dataset.from_generator(
-        generator,
-        output_signature=(tf.TensorSpec(shape=(None, None, 1), dtype=tf.uint8),
-                          tf.TensorSpec(shape=(None, None, 1),
-                                        dtype=tf.uint8)))
-    dataset = dataset.map(
-        lambda img, lab: random_crop_and_pad_image_and_labels(
-            img, lab, size=(224, 224)))
-    list(dataset.take(1))
+def random_scale(img, gt, min_scale_factor, max_scale_factor, step_size):
+    def get_random_scale(min_scale_factor, max_scale_factor, step_size):
+        """Gets a random scale value.
+        Args:
+            min_scale_factor: Minimum scale value.
+            max_scale_factor: Maximum scale value.
+            step_size: The step size from minimum to maximum value.
+        Returns:
+            A random scale value selected between minimum and maximum value.
+        Raises:
+            ValueError: min_scale_factor has unexpected value.
+        """
+        if min_scale_factor < 0 or min_scale_factor > max_scale_factor:
+            raise ValueError('Unexpected value of min_scale_factor.')
+
+        if min_scale_factor == max_scale_factor:
+            return min_scale_factor
+
+        # When step_size = 0, we sample the value uniformly from [min, max).
+        if step_size == 0:
+            return random.uniform(min_scale_factor, max_scale_factor)
+
+        # When step_size != 0, we randomly select one discrete value from [min, max].
+        num_steps = int((max_scale_factor - min_scale_factor) / step_size + 1)
+        scale_factors = np.linspace(min_scale_factor, max_scale_factor,
+                                    num_steps)
+        np.random.shuffle(scale_factors)
+        return scale_factors[0]
+
+    f_scale = get_random_scale(min_scale_factor, max_scale_factor, step_size)
+    # TODO: cv2 uses align_corner=False
+    # TODO: use fvcore (https://github.com/facebookresearch/fvcore/blob/master/fvcore/transforms/transform.py#L377)
+    new_size = int(f_scale * 1280)
+    image = tf.image.resize(img, [new_size, new_size], 'bilinear')
+    groundtruth = tf.image.resize(gt, [new_size, new_size], 'nearest')
+    return image, groundtruth

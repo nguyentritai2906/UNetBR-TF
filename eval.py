@@ -7,13 +7,14 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from absl import app, flags, logging
 from absl.flags import FLAGS
-from model.datagen import random_crop_and_pad_image_and_labels, read_image
-from model.loss import HeSho
-from model.model_func import UNetBR
 from PIL import Image
 from tensorflow import keras
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import Callback
+
+from model.datagen import random_crop, read_image
+from model.loss import HeSho
+from model.model_func import UNetBR
 from utils.utils import ProgressBar, load_yaml, set_memory_growth
 
 flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')

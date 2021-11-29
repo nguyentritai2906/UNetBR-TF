@@ -7,10 +7,11 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from absl import app, flags, logging
 from absl.flags import FLAGS
-from model.datagen import random_crop_and_pad_image_and_labels, read_image
+from tensorflow.keras import backend as K
+
+from model.datagen import read_image, transform_images
 from model.loss import HeSho
 from model.model import UNetBR
-from tensorflow.keras import backend as K
 from utils.utils import load_yaml, set_memory_growth
 
 flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')
@@ -43,16 +44,17 @@ def main(_):
         for gtf, imgf in iterator:
             yield np.array(read_image(imgf)), np.array(read_image(gtf))
 
-    dataset = tf.data.Dataset.from_generator(
-        generator,
-        output_signature=(tf.TensorSpec(shape=(None, None, 1),
-                                        dtype=tf.float32),
-                          tf.TensorSpec(shape=(None, None, 1),
-                                        dtype=tf.float32)))
+    dataset = tf.data.Dataset.from_generator(generator,
+                                             output_types=(tf.float32,
+                                                           tf.float32))
 
-    dataset = dataset.map(
-        lambda img, lab: random_crop_and_pad_image_and_labels(
-            img / 255., lab / 255., size=cfg['crop_size']))
+    dataset = dataset.map(lambda img, lab: transform_images(
+        img / 255., lab / 255., size=cfg['crop_size']))
+
+    # img, gt = list(dataset.take(1))[0]
+    # tf.keras.utils.save_img('./logs/debug/img.jpg', tf.squeeze(img, 0))
+    # tf.keras.utils.save_img('./logs/debug/label.jpg', tf.squeeze(gt, 0))
+    # quit()
 
     #  dataset = dataset.batch(cfg['batch_size'])
 
