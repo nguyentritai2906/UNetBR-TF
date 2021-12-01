@@ -8,13 +8,25 @@ import tensorflow_addons as tfa
 from absl import app, flags, logging
 from absl.flags import FLAGS
 from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import Callback
 
-from model.datagen import read_image, transform_images
+from model.datagen import random_crop, read_image, transform_images
 from model.loss import HeSho
 from model.model import UNetBR
 from utils.utils import load_yaml, set_memory_growth
 
 flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')
+
+
+class DebugCallback(Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        img = read_image('./images/test_img.jpeg') / 255.
+        img = tf.image.random_crop(img, (256, 256, 1))
+        img = tf.expand_dims(img, 0)
+        pred = self.model.predict(img)
+        output = tf.concat([img, pred[-1]], axis=2)
+        tf.keras.utils.save_img('./logs/debug/train_debug.jpeg',
+                                tf.squeeze(output, 0))
 
 
 def PSNR(y_true, y_pred):
@@ -88,12 +100,13 @@ def main(_):
     # Create a callback that saves the model's weights
     cb_checkpoint = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path, save_weights_only=True, verbose=1)
+    cb_debug = DebugCallback()
 
     model.fit(dataset,
               batch_size=2,
               epochs=cfg['epoch'],
               steps_per_epoch=cfg['dataset_len'] // cfg['batch_size'],
-              callbacks=[cb_checkpoint])
+              callbacks=[cb_checkpoint, cb_debug])
 
     model.save('./model.h5')
 
