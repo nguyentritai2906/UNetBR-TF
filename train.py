@@ -15,7 +15,6 @@ from model.model import UNetBR
 from utils.utils import load_yaml, set_memory_growth
 
 flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')
-flags.DEFINE_string('gpu', '0', 'which gpu to use')
 
 
 def PSNR(y_true, y_pred):
@@ -27,12 +26,10 @@ def PSNR(y_true, y_pred):
 def main(_):
     # init
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-    os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
 
     logger = tf.get_logger()
     logger.disabled = True
     logger.setLevel(logging.FATAL)
-    set_memory_growth()
 
     cfg = load_yaml(FLAGS.cfg_path)
 
@@ -51,10 +48,11 @@ def main(_):
     dataset = dataset.map(lambda img, lab: transform_images(
         img / 255., lab / 255., size=cfg['crop_size']))
 
-    # img, gt = list(dataset.take(1))[0]
-    # tf.keras.utils.save_img('./logs/debug/img.jpg', tf.squeeze(img, 0))
-    # tf.keras.utils.save_img('./logs/debug/label.jpg', tf.squeeze(gt, 0))
-    # quit()
+    #  os.makedirs('./logs/debug', exist_ok=True)
+    #  img, gt = list(dataset.take(1))[0]
+    #  tf.keras.utils.save_img('./logs/debug/img.jpg', tf.squeeze(img, 0))
+    #  tf.keras.utils.save_img('./logs/debug/label.jpg', tf.squeeze(gt, 0))
+    #  quit()
 
     #  dataset = dataset.batch(cfg['batch_size'])
 
@@ -70,14 +68,14 @@ def main(_):
                                         nesterov=True)
 
     # define network
-    model = UNetBR(input_shape=(224, 224, 1))
+    model = UNetBR(input_shape=(256, 256, 1))
     model.summary()
     model.compile(loss=HeSho,
                   optimizer=optimizer,
                   metrics=[
                       tfa.metrics.F1Score(num_classes=2,
                                           average="micro",
-                                          threshold=0.9),
+                                          threshold=0.5),
                       PSNR,
                   ])
 
@@ -93,6 +91,8 @@ def main(_):
               epochs=cfg['epoch'],
               steps_per_epoch=cfg['dataset_len'] // cfg['batch_size'],
               callbacks=[cb_checkpoint])
+
+    model.save('./model.h5')
 
 
 if __name__ == '__main__':

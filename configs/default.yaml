@@ -1,14 +1,16 @@
 # general setting
 batch_size: 8
-input_shape: [224, 224, 1]
-crop_size: [224, 224]
+input_shape: [256, 256, 1]
+crop_size: [256, 256]
 
 # training dataset
 dataset_path: './dataset/border'
 dataset_len: 298  # number of training samples
+# dataset_path: './dataset/DIBCO'
+# dataset_len: 106  # number of training samples
 
 # training setting
-epoch: 1000
+epoch: 20
 init_lr: !!float 1e-2
 decay_rate: 0.96
 decay_steps: 100

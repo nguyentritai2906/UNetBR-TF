@@ -15,7 +15,7 @@ def transform_images(img, gt, size):
 
     #  img, gt = random_scale(img, gt, 0.75, 1.5, 0.25)
     img, gt = random_crop(img, gt, size=size)
-    img = invert_image(img)
+    gt = invert_image(gt)
     img, gt = random_rotation(img, gt)
     return img, gt
 
