@@ -71,7 +71,7 @@ def main(_):
                                         nesterov=True)
 
     # define network
-    model = UNetBR(input_shape=(256, 256, 1))
+    model = UNetBR(input_shape=(256, 256, 1), is_train=True)
     model.summary()
     model.compile(loss=HeSho,
                   optimizer=optimizer,
