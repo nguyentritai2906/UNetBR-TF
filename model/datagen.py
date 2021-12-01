@@ -13,7 +13,7 @@ def transform_images(img, gt, size):
     #  img = tf.image.resize_with_pad(img, 1280, 1280)
     #  gt = tf.image.resize_with_pad(gt, 1280, 1280)
 
-    #  img, gt = random_scale(img, gt, 0.75, 1.5, 0.25)
+    img, gt = random_scale(img, gt, 0.5, 1.5, 0.25)
     img, gt = random_crop(img, gt, size=size)
     gt = invert_image(gt)
     img, gt = random_rotation(img, gt)

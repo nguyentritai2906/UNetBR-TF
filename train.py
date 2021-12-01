@@ -42,17 +42,20 @@ def main(_):
             yield np.array(read_image(imgf)), np.array(read_image(gtf))
 
     dataset = tf.data.Dataset.from_generator(generator,
+                                             output_shapes=((None, None, 1),
+                                                            (None, None, 1)),
                                              output_types=(tf.float32,
                                                            tf.float32))
 
     dataset = dataset.map(lambda img, lab: transform_images(
         img / 255., lab / 255., size=cfg['crop_size']))
 
-    #  os.makedirs('./logs/debug', exist_ok=True)
-    #  img, gt = list(dataset.take(1))[0]
-    #  tf.keras.utils.save_img('./logs/debug/img.jpg', tf.squeeze(img, 0))
-    #  tf.keras.utils.save_img('./logs/debug/label.jpg', tf.squeeze(gt, 0))
-    #  quit()
+    # os.makedirs('./logs/debug', exist_ok=True)
+    # for i in range(10):
+    #     img, gt = list(dataset.take(1))[0]
+    #     tf.keras.utils.save_img(f'./logs/debug/{i}img.jpg', tf.squeeze(img, 0))
+    #     tf.keras.utils.save_img(f'./logs/debug/{i}lab.jpg', tf.squeeze(gt, 0))
+    # quit()
 
     #  dataset = dataset.batch(cfg['batch_size'])
 
