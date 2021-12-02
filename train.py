@@ -17,6 +17,7 @@ from model.model import UNetBR
 from utils.utils import load_yaml, set_memory_growth
 
 flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')
+flags.DEFINE_string('resume', False, 'resume from weight')
 
 
 class DebugCallback(Callback):
@@ -88,6 +89,10 @@ def main(_):
 
     # define network
     model = UNetBR(input_shape=(256, 256, 1), is_train=True)
+
+    if FLAGS.resume:
+        model.load_weights('./model.h5')
+
     model.summary()
     model.compile(loss=HeSho,
                   optimizer=optimizer,
