@@ -3,13 +3,12 @@ import os
 import tensorflow as tf
 from absl import app, flags, logging
 from absl.flags import FLAGS
-from tensorflow.keras import backend as K
 
-from model.datagen import read_image
+from model.datagen import invert_image, read_image
 from model.model import UNetBR
 from utils.utils import load_yaml
 
-flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')
+flags.DEFINE_string('image', './images/test_img.jpeg', 'input image')
 
 
 def main(_):
@@ -20,15 +19,19 @@ def main(_):
     logger.disabled = True
     logger.setLevel(logging.FATAL)
 
-    cfg = load_yaml(FLAGS.cfg_path)
-
-    img = read_image('./images/test_img.jpeg', 'L')
+    img_path = FLAGS.image
+    img = read_image(img_path, 'L')
+    img = tf.image.resize_with_pad(img, 1024, 1024)
+    img = invert_image(img)
 
     model = UNetBR(input_shape=img.shape)
     model.load_weights('./model.h5')
 
     pred = model.predict(tf.expand_dims(img / 255., axis=0))
-    tf.keras.utils.save_img('images/test_img_out.jpeg', tf.squeeze(pred, 0))
+    out_path = os.path.join(
+        'images/',
+        os.path.basename(img_path).split('.')[0] + '_out.jpeg')
+    tf.keras.utils.save_img(out_path, tf.squeeze(pred, 0))
 
 
 if __name__ == '__main__':
