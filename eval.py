@@ -27,6 +27,7 @@ def main(_):
     model.load_weights('./model.h5')
 
     pred = model.predict(tf.expand_dims(img / 255., axis=0))
+    pred = invert_image(pred)
     out_path = os.path.join(
         'images/',
         os.path.basename(img_path).split('.')[0] + '_out.jpeg')
