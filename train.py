@@ -27,6 +27,7 @@ class DebugCallback(Callback):
         img = invert_image(img)
         pred = self.model.predict(img)
         output = tf.concat([img, pred[-1]], axis=2)
+        os.makedirs('./logs/debug', exist_ok=True)
         tf.keras.utils.save_img('./logs/debug/train_debug.jpeg',
                                 tf.squeeze(output, 0))
 
