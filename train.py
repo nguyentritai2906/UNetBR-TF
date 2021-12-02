@@ -17,7 +17,7 @@ from model.model import UNetBR
 from utils.utils import load_yaml, set_memory_growth
 
 flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')
-flags.DEFINE_string('resume', False, 'resume from weight')
+flags.DEFINE_boolean('resume', False, 'resume from weight')
 
 
 class DebugCallback(Callback):
