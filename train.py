@@ -21,15 +21,16 @@ flags.DEFINE_string('cfg_path', './configs/default.yaml', 'config file path')
 
 class DebugCallback(Callback):
     def on_epoch_end(self, epoch, logs=None):
-        img = read_image('./images/test_img.jpeg') / 255.
+        img = read_image('./images/clean.jpg') / 255.
         img = tf.image.random_crop(img, (256, 256, 1))
         img = tf.expand_dims(img, 0)
         img = invert_image(img)
         pred = self.model.predict(img)
         output = tf.concat([img, pred[-1]], axis=2)
         os.makedirs('./logs/debug', exist_ok=True)
-        tf.keras.utils.save_img('./logs/debug/train_debug.jpeg',
-                                tf.squeeze(output, 0))
+        tf.keras.utils.save_img(
+            f'./logs/debug/train_debug_epoch_{epoch:04d}.jpeg',
+            tf.squeeze(output, 0))
 
 
 def PSNR(y_true, y_pred):
