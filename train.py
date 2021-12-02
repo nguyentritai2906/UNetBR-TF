@@ -29,7 +29,7 @@ class DebugCallback(Callback):
         output = tf.concat([img, pred[-1]], axis=2)
         os.makedirs('./logs/debug', exist_ok=True)
         tf.keras.utils.save_img(
-            f'./logs/debug/train_debug_epoch_{epoch:04d}.jpeg',
+            f'./logs/debug/train_debug_epoch_{epoch+1:04d}.jpeg',
             tf.squeeze(output, 0))
 
 

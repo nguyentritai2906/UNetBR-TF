@@ -6,7 +6,6 @@ from absl.flags import FLAGS
 
 from model.datagen import invert_image, read_image
 from model.model import UNetBR
-from utils.utils import load_yaml
 
 flags.DEFINE_string('image', './images/test_img.jpeg', 'input image')
 
