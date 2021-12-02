@@ -10,7 +10,8 @@ from absl.flags import FLAGS
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import Callback
 
-from model.datagen import random_crop, read_image, transform_images
+from model.datagen import (invert_image, random_crop, read_image,
+                           transform_images)
 from model.loss import HeSho
 from model.model import UNetBR
 from utils.utils import load_yaml, set_memory_growth
@@ -23,6 +24,7 @@ class DebugCallback(Callback):
         img = read_image('./images/test_img.jpeg') / 255.
         img = tf.image.random_crop(img, (256, 256, 1))
         img = tf.expand_dims(img, 0)
+        img = invert_image(img)
         pred = self.model.predict(img)
         output = tf.concat([img, pred[-1]], axis=2)
         tf.keras.utils.save_img('./logs/debug/train_debug.jpeg',
